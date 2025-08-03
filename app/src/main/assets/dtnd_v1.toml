@@ -1,0 +1,31 @@
+# assets/dtnd.toml
+
+nodeid = "android-node"
+debug = true
+beacon-period = true
+
+parallel-bundle-processing = false
+webport = 3003
+
+[routing]
+strategy = "epidemic"
+
+[core]
+janitor = "0"
+
+[discovery]
+interval = "2s"
+peer-timout = "60s"
+
+[convergencylayers]
+global.tcp.refuse-existing-bundles = true
+
+cla.0.id = "mtcp"
+cla.0.port = 16163
+
+
+[endpoints]
+local.0 = "incoming"
+
+[store]
+path = "/data/data/com.example.mydtnapp/files/bundles"

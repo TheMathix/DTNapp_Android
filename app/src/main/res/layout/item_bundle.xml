@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="12dp"
+    android:background="?attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/tvBundleId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Bundle ID"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/tvBirdNames"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Bird1, Bird2"
+        android:layout_marginTop="4dp"/>
+
+    <TextView
+        android:id="@+id/tvAck"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pendente"
+        android:layout_marginTop="4dp"/>
+
+    <Button
+        android:id="@+id/btnDeleteBundle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Excluir"
+        android:layout_marginTop="8dp"/>
+
+</LinearLayout>
