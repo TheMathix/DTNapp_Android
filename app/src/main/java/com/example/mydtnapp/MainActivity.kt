@@ -97,7 +97,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private suspend fun pollStatusBundles() {
-
         val statusList = try {
             ApiClient.service.listBundleStatus()
         } catch (e: Exception) {
@@ -113,60 +112,111 @@ class MainActivity : AppCompatActivity() {
             }
 
             val source = parts[0]
+            val dest = parts[1]
             val rawId = parts[2]
             val bundleId = "$source-$rawId-0"
 
             if (processedBundles.contains(rawId) || ackExists(rawId)) {
-                Log.d("DTN-MAIN", "Ignorando bundle já processado ou ack: $rawId")
+//                Log.d("DTN-MAIN", "Ignorando bundle já processado ou ack: $rawId")
                 return@forEach
             }
 
-            val resp = try {
-                ApiClient.service.downloadBundle("download?$bundleId")
-            } catch (e: Exception) {
-                Log.e("DTN-MAIN", "Erro ao baixar $bundleId: ${e.message}")
+            if (dest.contains("/acks")) {
+                val resp = try {
+                    ApiClient.service.downloadBundle("download?$bundleId")
+                } catch (e: Exception) {
+                    Log.e("DTN-MAIN", "Erro ao baixar ACK $bundleId: ${e.message}")
+                    return@forEach
+                }
+
+                if (!resp.isSuccessful) {
+                    Log.w("DTN-MAIN", "Falha no download do ACK $bundleId: ${resp.code()}")
+                    return@forEach
+                }
+
+                val rawBytes = resp.body()!!.bytes()
+                val jsonStart = rawBytes.indexOf('{'.code.toByte())
+                val jsonEnd = rawBytes.lastIndexOf('}'.code.toByte())
+
+                if (jsonStart == -1 || jsonEnd == -1 || jsonEnd <= jsonStart) {
+                    Log.e("DTN-MAIN", "JSON malformado no ACK $bundleId")
+                    return@forEach
+                }
+
+                val jsonBytes = rawBytes.sliceArray(jsonStart..jsonEnd)
+                val jsonText = String(jsonBytes, Charsets.UTF_8).trim()
+                Log.d("DTN-MAIN", "ACK $bundleId JSON extraído:\n$jsonText")
+
+                try {
+                    val ack = Gson().fromJson(jsonText, AckInfo::class.java)
+                    val rawFromAck = extractRawId(ack.bundle_id)
+
+                    if (rawFromAck != null) {
+                        saveAck(rawFromAck)
+                        processedBundles.add(rawId)
+
+                        bundlesMap[ack.bundle_id]?.let { orig ->
+                            bundlesMap[ack.bundle_id] = orig.copy(ackSent = true)
+                        }
+
+                        val bundleToDelete = ack.bundle_id
+
+                        try {
+                            ApiClient.service.deleteBundle("delete?$bundleToDelete")
+                            Log.i("DTN-MAIN", "Bundle original $bundleToDelete deletado após ACK.")
+                        } catch (e: Exception) {
+                            Log.w("DTN-MAIN", "Erro ao deletar bundle $bundleToDelete: ${e.message}")
+                        }
+
+                    }
+
+                } catch (e: Exception) {
+                    Log.e("DTN-MAIN", "Erro ao interpretar JSON do ACK $bundleId", e)
+                }
+
                 return@forEach
             }
 
-            if (!resp.isSuccessful) {
-                Log.w("DTN-MAIN", "Falha no download de $bundleId: ${resp.code()}")
-                return@forEach
-            }
+            if (dest.contains("/incoming")) {
+                val resp = try {
+                    ApiClient.service.downloadBundle("download?$bundleId")
+                } catch (e: Exception) {
+                    Log.e("DTN-MAIN", "Erro ao baixar bundle $bundleId: ${e.message}")
+                    return@forEach
+                }
 
-            val rawBytes = resp.body()!!.bytes()
-            val jsonStart = rawBytes.indexOf('{'.code.toByte())
-            val jsonEnd = rawBytes.lastIndexOf('}'.code.toByte())
+                if (!resp.isSuccessful) {
+                    Log.w("DTN-MAIN", "Falha no download de $bundleId: ${resp.code()}")
+                    return@forEach
+                }
 
-            if (jsonStart == -1 || jsonEnd == -1 || jsonEnd <= jsonStart) {
-                Log.e("DTN-MAIN", "JSON malformado no bundle $bundleId")
-                return@forEach
-            }
+                val rawBytes = resp.body()!!.bytes()
+                val jsonStart = rawBytes.indexOf('{'.code.toByte())
+                val jsonEnd = rawBytes.lastIndexOf('}'.code.toByte())
 
-            val jsonBytes = rawBytes.sliceArray(jsonStart..jsonEnd)
-            val jsonText = String(jsonBytes, Charsets.UTF_8).trim()
-            Log.d("DTN-MAIN", "Bundle $bundleId JSON extraído:\n$jsonText")
+                if (jsonStart == -1 || jsonEnd == -1 || jsonEnd <= jsonStart) {
+                    Log.e("DTN-MAIN", "JSON malformado no bundle $bundleId")
+                    return@forEach
+                }
 
-            try {
-                if (jsonText.contains("\"detections\"")) {
+                val jsonBytes = rawBytes.sliceArray(jsonStart..jsonEnd)
+                val jsonText = String(jsonBytes, Charsets.UTF_8).trim()
+                Log.d("DTN-MAIN", "Bundle $bundleId JSON extraído:\n$jsonText")
+
+                try {
                     val payload = Gson().fromJson(jsonText, IncomingPayload::class.java)
                     val birds = payload.detections.map { it.Com_Name }
-                    val prevAck = bundlesMap[payload.bundle_id]?.ackSent ?: false
-                    bundlesMap[payload.bundle_id] = BundleInfo(payload.bundle_id, birds, prevAck)
+                    val prevAck = bundlesMap[bundleId]?.ackSent ?: false
+                    bundlesMap[bundleId] = BundleInfo(bundleId, birds, prevAck)
                     processedBundles.add(rawId)
-
-                } else if (jsonText.contains("\"hash_id\"")) {
-                    val ack = Gson().fromJson(jsonText, AckInfo::class.java)
-                    bundlesMap[ack.bundle_id]?.let { orig ->
-                        bundlesMap[ack.bundle_id] = orig.copy(ackSent = true)
-                    }
-                    saveAck(ack.bundle_id)
-                    processedBundles.add(rawId)
-                } else {
-                    Log.w("DTN-MAIN", "Conteúdo desconhecido no bundle $bundleId")
+                } catch (e: Exception) {
+                    Log.e("DTN-MAIN", "Erro ao interpretar JSON do bundle $bundleId", e)
                 }
-            } catch (e: Exception) {
-                Log.e("DTN-MAIN", "Erro ao interpretar JSON do bundle $bundleId", e)
+
+                return@forEach
             }
+
+            Log.d("DTN-MAIN", "Ignorando bundle em endpoint irrelevante: $dest")
         }
 
         runOnUiThread {

@@ -16,7 +16,7 @@ class BundleAdapter(
 
     companion object {
         private val DIFF = object : DiffUtil.ItemCallback<BundleInfo>() {
-            override fun areItemsTheSame(old: BundleInfo, new: BundleInfo) = old.id == new.id
+            override fun areItemsTheSame(old: BundleInfo, new: BundleInfo) = old.bundleId == new.bundleId
             override fun areContentsTheSame(old: BundleInfo, new: BundleInfo) = old == new
         }
     }
@@ -38,7 +38,7 @@ class BundleAdapter(
         private val btnDelete   = itemView.findViewById<Button>(R.id.btnDeleteBundle)
 
         fun bind(info: BundleInfo) {
-            tvBundleId.text  = info.id
+            tvBundleId.text  = info.bundleId
             tvBirdNames.text = info.birdNames.joinToString(", ")
             tvAck.text       = if (info.ackSent) "ACK enviado" else "Pendente"
 
@@ -48,7 +48,7 @@ class BundleAdapter(
                 else android.R.color.transparent
             )
 
-            btnDelete.setOnClickListener { onDelete(info.id) }
+            btnDelete.setOnClickListener { onDelete(info.bundleId) }
         }
     }
 }
