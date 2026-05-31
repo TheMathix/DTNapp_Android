@@ -11,8 +11,22 @@
         android:id="@+id/btnRefreshBundles"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Atualizar Bundles"
+        android:text="Update Bundles"
         android:layout_marginTop="24dp"/>
+
+    <Button
+        android:id="@+id/btnSendAudio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send test audio"
+        android:layout_marginTop="8dp"/>
+
+    <Button
+        android:id="@+id/btnSendTinyBundle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send tiny bundle"
+        android:layout_marginTop="8dp"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvBundles"

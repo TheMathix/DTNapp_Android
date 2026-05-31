@@ -1,0 +1,49 @@
+# dtnd.toml for the Raspberry Pi BLE peer.
+# Mirrors the phone's config but with a distinct node-id and ECLA on.
+
+nodeid = "pi-collector"
+
+debug = false
+beacon-period = true
+generate-status-reports = false
+parallel-bundle-processing = false
+
+# REST/WebSocket port. ble_cla.py connects to ws://127.0.0.1:3000/ws/ecla
+webport = 3000
+
+# Where dtnd stores bundles. Override if you want a non-/tmp location.
+workdir = "/tmp/dtn7"
+db = "mem"
+
+[routing]
+strategy = "epidemic"
+
+[core]
+janitor = "10s"
+
+[discovery]
+# dtnd will emit beacon packets every `interval`. The BleCla forwards them
+# over BLE to the phone. Keep this short for snappy peering at low scale.
+interval = "2s"
+peer-timeout = "20s"
+
+[convergencylayers]
+# mtcp is commented out for the BLE-only test. With it enabled, the Pi's
+# dtnd learns the phone via multicast whenever the phone is on Wi-Fi, and
+# then prefers mtcp for routing even after Wi-Fi drops — meaning bundles
+# go into a black hole over TCP instead of being routed via BleCla. Leave
+# it off until BLE-only delivery is confirmed end-to-end.
+global.tcp.refuse-existing-bundles = true
+# cla.0.id = "mtcp"
+# cla.0.port = 16163
+
+[endpoints]
+# Local endpoints reachable as dtn://pi-collector/<name>
+local.0 = "incoming"
+local.1 = "acks"
+local.2 = "null"
+
+# === External CLA — the BLE bridge connects here ===
+[ecla]
+enabled  = true
+tcp_port = 0

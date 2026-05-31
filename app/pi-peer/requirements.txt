@@ -1,0 +1,19 @@
+# Python deps for ble_cla.py on Raspberry Pi OS (Bookworm or later).
+# Tested with Python 3.11 and 3.13.
+
+# Async WebSocket client used to talk to dtn7-rs ECLA on /ws/ecla.
+websockets>=12.0
+
+# Cross-platform BLE central library — used to scan and connect to the phone.
+bleak>=0.22.0
+
+# BLE peripheral / GATT server. Uses dbus_fast under the hood, which
+# tolerates BlueZ 5.66+ introspection XML quirks that break dbus_next.
+# (We previously used bluez-peripheral but its dbus_next dependency
+# crashed with InvalidIntrospectionError on Raspberry Pi OS Bookworm+.)
+bless>=0.2.6
+
+dbus-fast>=2.21.0
+
+# HTTP client for receive_audio.py polling dtnd REST endpoints.
+requests>=2.31.0

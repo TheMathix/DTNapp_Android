@@ -11,7 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.mydtnapp.model.BundleInfo
 
 class BundleAdapter(
-    private val onDelete: (bundleId: String) -> Unit
+    private val onDelete: (bundleId: String) -> Unit,
+    private val onPlay: (path: String) -> Unit = {}
 ) : ListAdapter<BundleInfo, BundleAdapter.ViewHolder>(DIFF) {
 
     companion object {
@@ -35,6 +36,7 @@ class BundleAdapter(
         private val tvBundleId  = itemView.findViewById<TextView>(R.id.tvBundleId)
         private val tvBirdNames = itemView.findViewById<TextView>(R.id.tvBirdNames)
         private val tvAck       = itemView.findViewById<TextView>(R.id.tvAck)
+        private val btnPlay     = itemView.findViewById<Button>(R.id.btnPlayAudio)
         private val btnDelete   = itemView.findViewById<Button>(R.id.btnDeleteBundle)
 
         fun bind(info: BundleInfo) {
@@ -47,6 +49,15 @@ class BundleAdapter(
                 if (info.ackSent) R.color.bundle_ack_background
                 else android.R.color.transparent
             )
+
+            val path = info.audioPath
+            if (path != null) {
+                btnPlay.visibility = View.VISIBLE
+                btnPlay.setOnClickListener { onPlay(path) }
+            } else {
+                btnPlay.visibility = View.GONE
+                btnPlay.setOnClickListener(null)
+            }
 
             btnDelete.setOnClickListener { onDelete(info.bundleId) }
         }

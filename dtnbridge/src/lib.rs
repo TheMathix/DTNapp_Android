@@ -14,7 +14,7 @@ pub extern "system" fn Java_com_example_mydtnapp_MainActivity_startdaemon(
 ) {
     std::thread::spawn(|| {
         if let Err(e) = run_dtnd() {
-            error!("❌ Failed to start DTND: {:?}", e);
+            error!("Failed to start DTND: {:?}", e);
         }
     });
 }

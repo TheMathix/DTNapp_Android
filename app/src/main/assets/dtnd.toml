@@ -111,7 +111,7 @@ group.0 = "dtn://hometown/~weather" # atm ignored
 
 # External CLA settings
 [ecla]
-# If ECLA should be enabled
-enabled  = false
-# If the TCP Port is not 0 ECLA clients can also connect via TCP to that port
+# If ECLA should be enabled — the Android app connects to /ws/ecla and acts as the BleCla
+enabled  = true
+# 0 = WebSocket only (we use the WebSocket on the web port at /ws/ecla)
 tcp_port = 0

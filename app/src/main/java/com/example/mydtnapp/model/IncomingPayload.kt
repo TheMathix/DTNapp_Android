@@ -19,5 +19,6 @@ data class Detection(
 data class IncomingPayload(
     val source_eid: String,
     val bundle_id: String,
-    val detections: List<Detection>
+    val detections: List<Detection>,
+    val mp3_data: String
 )
